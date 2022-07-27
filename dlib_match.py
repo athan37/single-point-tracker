@@ -1,5 +1,30 @@
 import cv2
 import dlib
+from skimage.metrics import structural_similarity
+
+#global var
+FRAME_NAME = 'frame'
+
+'''
+#goal: 
+- remove occlusion from other objects
+- know when the object is out of the window
+- Use ssim index to restart the tracker -> vulnerable to scaling, rotation
+
+Fix this:
+
+.....
+ [[183 180 180]
+  [184 179 180]
+  [184 179 179]
+  ...
+  [175 152 151]
+  [173 152 150]
+  [172 152 150]]] asdf
+Low similarity
+[] [] asdf
+
+'''
 
 current_pos = None
 points = []
@@ -25,6 +50,33 @@ def on_mouse(event, x, y, flags,params):
     elif cropping:
         current_pos = (x, y)
 
+def is_out_of_box(pos):
+    x, y, w, h = cv2.getWindowImageRect(FRAME_NAME)
+    startX, startY, endX, endY = map(int, [pos.left(), pos.top(), pos.right(), pos.bottom()])
+
+    horiz_check = startX < x or endX > x + w
+    verti_check = startY < y or endY > y + h
+
+    return not (horiz_check or verti_check)
+
+def image_from_object(img_obj):
+    rbg, rect = img_obj
+    startX, startY, endX, endY = map(int, [pos.left(), pos.top(), pos.right(), pos.bottom()])
+    return rbg[startY:endY, startX: endX, :]
+
+
+def is_low_similarity(img_obj, track_object):
+    # img1 = cv2.cvtColor(image_from_object(img_obj), cv2.COLOR_RGB2BGR)
+    # img2 = cv2.cvtColor(image_from_object(track_object), cv2.COLOR_RGB2BGR)
+    img1 = image_from_object(img_obj)
+    img2 = image_from_object(track_object)
+
+    print(img1, img2, 'asdf')
+    score, _ = structural_similarity(img1, img2, full=True, multichannel=True)
+    
+    return score * 100 < 90
+
+
 cap = cv2.VideoCapture(0)
 waitTime = 50
 
@@ -32,12 +84,16 @@ tracker = None
 #Reading the first frame
 (grabbed, frame) = cap.read()
 method = cv2.TM_CCORR_NORMED
-print("running")
+
+
+
+
+track_object = None
 while True:
     (grabbed, frame) = cap.read()
 
-    cv2.namedWindow('frame')
-    cv2.setMouseCallback('frame', on_mouse)
+    cv2.namedWindow(FRAME_NAME)
+    cv2.setMouseCallback(FRAME_NAME, on_mouse)
 
     #for dlib
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -58,12 +114,25 @@ while True:
 
         if tracker is None:
             tracker = dlib.correlation_tracker()
-            rect = dlib.rectangle(x1, y1, x2, y2)
-            tracker.start_track(rgb, rect)
+            rect = dlib.rectangle(x1, y1, x2, y2) #Just a bounding box
+            if track_object is None: track_object = (rgb, rect)
+            tracker.start_track(*track_object)
         else:
              #tracking
             tracker.update(rgb)
             pos = tracker.get_position()
+
+            if is_out_of_box(pos):
+                print("Out")
+                tracker = dlib.correlation_tracker() 
+                tracker.start_track(*track_object)
+                continue
+
+            if is_low_similarity((rgb, pos), track_object):
+                print("Low similarity")
+                cv2.imshow(FRAME_NAME, frame)
+                
+                continue
 
             startX = int(pos.left())
             startY = int(pos.top())
@@ -87,7 +156,7 @@ while True:
 
         #template = frame[top_left[1] : bottom_right[1], top_left[0] : bottom_right[0]]
 
-    cv2.imshow('frame', frame)
+    cv2.imshow(FRAME_NAME, frame)
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'): break
