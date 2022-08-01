@@ -30,6 +30,7 @@ waitTime = 50
 #Reading the first frame
 (grabbed, frame) = cap.read()
 
+count = 1
 while True:
     (grabbed, frame) = cap.read()
 
@@ -62,6 +63,12 @@ while True:
     cv2.imshow('frame', frame)
 
     key = cv2.waitKey(1) & 0xFF
+
+    if key == ord('t'):
+        count += 1 
+        x1, y1 = top_left
+        x2, y2 = bottom_right
+        cv2.imwrite(f"Img_{count}.png", frame[y1:y2, x1 : x2, :])
     if key == ord('q'): break
 
 cap.release()

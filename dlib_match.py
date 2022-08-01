@@ -71,7 +71,7 @@ def is_low_similarity(img_obj, track_object):
     img1 = image_from_object(img_obj)
     img2 = image_from_object(track_object)
 
-    if len(img1) == 0: return True
+    if len(img1) < 7 or len(img2) < 7: return True
 
     #print(img1, img2, 'asdf')
     score, _ = structural_similarity(img1, img2, full=True, multichannel=True)
@@ -87,8 +87,6 @@ tracker = None
 #Reading the first frame
 (grabbed, frame) = cap.read()
 method = cv2.TM_CCORR_NORMED
-
-
 
 
 track_object = None
@@ -131,11 +129,11 @@ while True:
             #     tracker.start_track(*track_object)
             #     continue
 
-            if is_low_similarity((rgb, pos), track_object):
-                print("Low similarity")
-                tracker.start_track(*track_object)
-                cv2.imshow(FRAME_NAME, frame)
-                tracker.update(rgb)
+            # if is_low_similarity((rgb, pos), track_object):
+            #     print("Low similarity")
+            #     tracker.start_track(*track_object)
+            #     cv2.imshow(FRAME_NAME, frame)
+            #     tracker.update(rgb)
                 # continue
 
             startX = int(pos.left())
