@@ -71,10 +71,13 @@ def is_low_similarity(img_obj, track_object):
     img1 = image_from_object(img_obj)
     img2 = image_from_object(track_object)
 
-    print(img1, img2, 'asdf')
+    if len(img1) == 0: return True
+
+    #print(img1, img2, 'asdf')
     score, _ = structural_similarity(img1, img2, full=True, multichannel=True)
+    print(score)
     
-    return score * 100 < 90
+    return score * 100 < 50
 
 
 cap = cv2.VideoCapture(0)
@@ -122,17 +125,18 @@ while True:
             tracker.update(rgb)
             pos = tracker.get_position()
 
-            if is_out_of_box(pos):
-                print("Out")
-                tracker = dlib.correlation_tracker() 
-                tracker.start_track(*track_object)
-                continue
+            # if is_out_of_box(pos):
+            #     print("Out")
+            #     tracker = dlib.correlation_tracker() 
+            #     tracker.start_track(*track_object)
+            #     continue
 
             if is_low_similarity((rgb, pos), track_object):
                 print("Low similarity")
+                tracker.start_track(*track_object)
                 cv2.imshow(FRAME_NAME, frame)
-                
-                continue
+                tracker.update(rgb)
+                # continue
 
             startX = int(pos.left())
             startY = int(pos.top())
