@@ -3,20 +3,27 @@ import numpy as np
 
 TEST_FILE_NAME = 'box.mp4'
 TRACK_POSITION = (500, 300, 1150, 800) #First frame
+VIDEO_URL      = 'https://drive.google.com/uc?id=1Ut903-OaQ6y1OQqyAI3vS6hd7Hf9Jn8m'
 
 if not os.path.exists(os.path.join(os.getcwd(), TEST_FILE_NAME)):
     import gdown
-    url = 'https://drive.google.com/uc?id=1Ut903-OaQ6y1OQqyAI3vS6hd7Hf9Jn8m'
-    gdown.download(url, TEST_FILE_NAME)
+    gdown.download(TRACK_POSITION, TEST_FILE_NAME)
 
 import cv2
 import dlib
 
-def get_similarity(img1, img2):
-    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
-    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
 
-    MIN_MATCH_COUNT = 10
+def process_img(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.GaussianBlur(img,(3,3),cv2.BORDER_DEFAULT)
+    img = cv2.resize(img, (50, 50)) 
+
+    return img
+
+def get_similarity(img1, img2):
+    img1 = process_img(img1)
+    img2 = process_img(img2)
+    
     # Initiate SIFT detector
     sift = cv2.SIFT_create()
     # find the keypoints and descriptors with SIFT
@@ -67,21 +74,20 @@ while cap.isOpened():
         try:
             similarity = get_similarity(template, guess)
 
-            if similarity > 200:
-                track_object = (rgb, pos)
+            if similarity > 20:
+                track_obj = (rgb, pos)
         except Exception as e:
             print(e, "Restart tracking")
-            tracker.start_track(*track_object)
+            if track_obj is not None:
+                tracker.start_track(*track_obj)
         
-
-
     #Update prev frame
     template = guess
 
     #Draw box + show frame
-    if similarity and isinstance(similarity, int) and similarity > 30:
+    if similarity and isinstance(similarity, int) and similarity > 13:
         cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)
-    cv2.putText(frame, f"{similarity}", (startX, startY - 15), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+        cv2.putText(frame, f"{similarity}", (startX, startY - 15), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
     cv2.imshow("Frame", frame)
 
     if cv2.waitKey(1) == ord('q'): break
