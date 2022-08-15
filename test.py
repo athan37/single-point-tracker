@@ -8,15 +8,14 @@ import numpy as np
 #     import gdown
 #     gdown.download(TRACK_POSITION, TEST_FILE_NAME)
 
-
-
 import cv2
 import dlib
 import json
  
 # Opening JSON file
+NUM_TEST = 7
 data = None
-test_dir_path  = os.path.join(os.getcwd(), 'test_data', 'test2')
+test_dir_path  = os.path.join(os.getcwd(), 'test_data', f'test{NUM_TEST}')
 test_file_path = os.path.join(test_dir_path, 'test_info.json')
 
 with open(test_file_path) as json_file:
@@ -29,7 +28,7 @@ TRACK_POSITION = data['rect']
 def process_img(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.GaussianBlur(img,(3,3),cv2.BORDER_DEFAULT)
-    img = cv2.resize(img, (50, 50)) 
+    img = cv2.resize(img, (150, 150)) 
 
     return img
 
@@ -50,7 +49,7 @@ def get_similarity(img1, img2):
     # store all the good matches as per Lowe's ratio test.
     good = []
     for m,n in matches:
-        if m.distance < 0.6*n.distance:
+        if m.distance < 0.7*n.distance:
             good.append(m)
 
     return len(good)
@@ -63,7 +62,8 @@ template = None
 similarity = "None"
 track_obj = None
 cap = cv2.VideoCapture(os.path.join(test_dir_path, TEST_FILE_NAME))
-print(os.path.join(test_file_path, TEST_FILE_NAME))
+
+guess_templates = []
 while cap.isOpened():
     ret, frame = cap.read()
     # if frame is read correctly ret is True
@@ -88,19 +88,29 @@ while cap.isOpened():
     if template is not None:
         try:
             similarity = get_similarity(template, guess)
-
-            if similarity > 12:
+            
+            if similarity > 6:
                 track_obj = (rgb, pos)
+                guess_templates.append(track_obj)
+
         except Exception as e:
             print(e, "Restart tracking")
+            max_similarity = -float("inf")
+            index = -1
+            for i, guess_template in enumerate(guess_templates):
+                if similarity > max_similarity:
+                    max_similarity = similarity
+                    index          = i
+
             if track_obj is not None:
-                tracker.start_track(*track_obj)
-        
+                tracker.start_track(*guess_templates[index]) 
+                #tracker.start_track(*track_obj)
+
     #Update prev frame
     template = guess
 
     #Draw box + show frame
-    if similarity and isinstance(similarity, int) and similarity > 8:
+    if similarity and isinstance(similarity, int) and similarity > 10:
         cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)
         cv2.putText(frame, f"{similarity}", (startX, startY - 15), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
     cv2.imshow("Frame", frame)
