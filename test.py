@@ -8,15 +8,23 @@ import numpy as np
 #     import gdown
 #     gdown.download(TRACK_POSITION, TEST_FILE_NAME)
 
-from dotenv import load_dotenv
-load_dotenv()
-
-TEST_FILE_NAME = os.getenv("NAME")
-TRACK_POSITION = tuple(map(int, os.getenv("RECT").split())) #First frame
 
 
 import cv2
 import dlib
+import json
+ 
+TEST_NUM = 1
+# Opening JSON file
+data = None
+test_dir_path  = os.path.join(os.getcwd(), 'test_data', f'test{TEST_NUM}')
+test_file_path = os.path.join(test_dir_path, 'test_info.json')
+
+with open(test_file_path) as json_file:
+    data = json.load(json_file)
+
+TEST_FILE_NAME = data['name']
+TRACK_POSITION = data['rect']
 
 
 def process_img(img):
@@ -43,7 +51,7 @@ def get_similarity(img1, img2):
     # store all the good matches as per Lowe's ratio test.
     good = []
     for m,n in matches:
-        if m.distance < 0.8*n.distance:
+        if m.distance < 0.6*n.distance:
             good.append(m)
 
     return len(good)
@@ -55,7 +63,8 @@ prev_frame = None
 template = None
 similarity = "None"
 track_obj = None
-cap = cv2.VideoCapture(TEST_FILE_NAME)
+cap = cv2.VideoCapture(os.path.join(test_dir_path, TEST_FILE_NAME))
+
 while cap.isOpened():
     ret, frame = cap.read()
     # if frame is read correctly ret is True
@@ -76,11 +85,12 @@ while cap.isOpened():
 
     #Get similarity
     guess = rgb[startY:endY, startX:endX]
+
     if template is not None:
         try:
             similarity = get_similarity(template, guess)
 
-            if similarity > 35:
+            if similarity > 12:
                 track_obj = (rgb, pos)
         except Exception as e:
             print(e, "Restart tracking")
@@ -91,7 +101,7 @@ while cap.isOpened():
     template = guess
 
     #Draw box + show frame
-    if similarity and isinstance(similarity, int) and similarity > 20:
+    if similarity and isinstance(similarity, int) and similarity > 8:
         cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)
         cv2.putText(frame, f"{similarity}", (startX, startY - 15), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
     cv2.imshow("Frame", frame)
