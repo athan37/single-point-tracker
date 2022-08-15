@@ -14,10 +14,9 @@ import cv2
 import dlib
 import json
  
-TEST_NUM = 1
 # Opening JSON file
 data = None
-test_dir_path  = os.path.join(os.getcwd(), 'test_data', f'test{TEST_NUM}')
+test_dir_path  = os.path.join(os.getcwd(), 'test_data', 'test2')
 test_file_path = os.path.join(test_dir_path, 'test_info.json')
 
 with open(test_file_path) as json_file:
@@ -64,7 +63,7 @@ template = None
 similarity = "None"
 track_obj = None
 cap = cv2.VideoCapture(os.path.join(test_dir_path, TEST_FILE_NAME))
-
+print(os.path.join(test_file_path, TEST_FILE_NAME))
 while cap.isOpened():
     ret, frame = cap.read()
     # if frame is read correctly ret is True
