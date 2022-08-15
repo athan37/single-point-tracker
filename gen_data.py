@@ -39,6 +39,7 @@ waitTime = 50
 (grabbed, frame) = cap.read()
 
 count = 1
+writtten = False
 while True:
     (grabbed, frame) = cap.read()
 
@@ -59,42 +60,15 @@ while True:
 
         #Start writing video from this frame plus storing the position of the template
 
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,480))
-
-        out.write(frame)
-
-
-        template = frame[y1 : y2, x1 : x2] if template is None else template
-
-        h, w = template.shape[:-1]
-        img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        res = cv2.matchTemplate(img_gray, cv2.cvtColor(template, cv2.COLOR_BGR2GRAY), method)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-
-
-        if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
-            top_left = min_loc
+        if writtten == False:
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter('output.mp4',fourcc, 15.0, (frame.shape[:-1]))
+            f = open("rect_for_output.txt", 'a')
+            f.write(f"{(x1, y1, x2, y2)}")
+            f.close()
+            writtten = True
         else:
-            top_left = max_loc
-        bottom_right = top_left[0] + w, top_left[1] + h
-
-        x1, y1, x2, y2 = *top_left, *bottom_right
-
-        similarity = "None"
-
-        try:
-            guess = img_gray[y1:y2, x1:x2]
-            similarity = get_similarity(template, guess)
-
-            # if similarity > 10:
-            #     template = frame[y1:y2, x1:x2]
-        except Exception as e:
-            # print(e)
-            pass
-
-        cv2.rectangle(frame, top_left, bottom_right, 200, 2)
-        cv2.putText(frame, f"{similarity}", (x1, y1 - 15), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+            out.write(frame)
 
     cv2.imshow('frame', frame)
 

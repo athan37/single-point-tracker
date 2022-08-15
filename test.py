@@ -1,8 +1,8 @@
 import os
 import numpy as np
 
-TEST_FILE_NAME = 'box.mp4'
-TRACK_POSITION = (500, 300, 1150, 800) #First frame
+TEST_FILE_NAME = 'output.mp4'
+TRACK_POSITION = (1094, 435, 1359, 657) #First frame
 VIDEO_URL      = 'https://drive.google.com/uc?id=1Ut903-OaQ6y1OQqyAI3vS6hd7Hf9Jn8m'
 
 if not os.path.exists(os.path.join(os.getcwd(), TEST_FILE_NAME)):
@@ -74,7 +74,7 @@ while cap.isOpened():
         try:
             similarity = get_similarity(template, guess)
 
-            if similarity > 20:
+            if similarity > 23:
                 track_obj = (rgb, pos)
         except Exception as e:
             print(e, "Restart tracking")
@@ -85,7 +85,7 @@ while cap.isOpened():
     template = guess
 
     #Draw box + show frame
-    if similarity and isinstance(similarity, int) and similarity > 13:
+    if similarity and isinstance(similarity, int) and similarity > 14:
         cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)
         cv2.putText(frame, f"{similarity}", (startX, startY - 15), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
     cv2.imshow("Frame", frame)
