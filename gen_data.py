@@ -4,7 +4,40 @@ Record a video from webcam
 
 Get the intial position of the object
 
+Useful commands: 
+
+TEST_FOLDER_NAME = 'test_data'
+subfolders = [ f.path for f in os.scandir(os.path.join(os.getcwd(), TEST_FOLDER_NAME)) if f.is_dir()] 
+
+max_test_count = 1
+for subfolder in subfolders:
+    test_count = int(subfolder[subfolder.rindex('test') + len('test'):])
+    max_test_count = max(max_test_count, test_count)
+
+current_test_folder = os.path.join(os.getcwd(), TEST_FOLDER_NAME, f"test{max_test_count + 1}")
+
+video_path = os.path.join(current_test_folder, 'output.mp4')
+info_path  = os.path.join(current_test_folder, 'test_info.txt')
+
+
 '''
+import os
+#Choose the folder to hold all test video
+TEST_FOLDER_NAME = 'test_data'
+
+#Get max test count to auto write new test
+max_test_count = 1
+subfolders = [ f.path for f in os.scandir(os.path.join(os.getcwd(), TEST_FOLDER_NAME)) if f.is_dir()] 
+for subfolder in subfolders:
+    test_count = int(subfolder[subfolder.rindex('test') + len('test'):])
+    max_test_count = max(max_test_count, test_count)
+
+new_test_folder = f"test{max_test_count + 1}"
+#Use the max test count to write new current test folder
+current_test_folder = os.path.join(os.getcwd(), TEST_FOLDER_NAME, new_test_folder)
+os.mkdir(current_test_folder)
+video_path = os.path.join(current_test_folder, 'output.mp4')
+info_path  = os.path.join(current_test_folder, 'test_info.txt')
 
 import cv2
 
@@ -62,10 +95,14 @@ while True:
 
         if writtten == False:
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter('output.mp4',fourcc, 15.0, (frame.shape[:-1]))
-            f = open("rect_for_output.txt", 'a')
-            f.write(f"{(x1, y1, x2, y2)}")
-            f.close()
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            out = cv2.VideoWriter(video_path, fourcc, 20, (width, height), isColor=True)
+            os.chdir(current_test_folder)
+            with open(info_path, 'a') as f:
+                f.truncate(0)
+                f.write(f"NAME = 'output.mp4'\n")
+                f.write(f"RECT = '{x1} {y1} {x2} {y2}'")
             writtten = True
         else:
             out.write(frame)

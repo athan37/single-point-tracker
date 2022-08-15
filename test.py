@@ -1,13 +1,19 @@
 import os
 import numpy as np
 
-TEST_FILE_NAME = 'output.mp4'
-TRACK_POSITION = (1094, 435, 1359, 657) #First frame
-VIDEO_URL      = 'https://drive.google.com/uc?id=1Ut903-OaQ6y1OQqyAI3vS6hd7Hf9Jn8m'
+# VIDEO_URL      = 'https://drive.google.com/uc?id=1Ut903-OaQ6y1OQqyAI3vS6hd7Hf9Jn8m'
+# TEST_FILE_NAME = 'output.mp4'
+# TRACK_POSITION = (1094, 435, 1359, 657) #First frame
+# if not os.path.exists(os.path.join(os.getcwd(), TEST_FILE_NAME)):
+#     import gdown
+#     gdown.download(TRACK_POSITION, TEST_FILE_NAME)
 
-if not os.path.exists(os.path.join(os.getcwd(), TEST_FILE_NAME)):
-    import gdown
-    gdown.download(TRACK_POSITION, TEST_FILE_NAME)
+from dotenv import load_dotenv
+load_dotenv()
+
+TEST_FILE_NAME = os.getenv("NAME")
+TRACK_POSITION = tuple(map(int, os.getenv("RECT").split())) #First frame
+
 
 import cv2
 import dlib
@@ -31,7 +37,7 @@ def get_similarity(img1, img2):
     kp2, des2 = sift.detectAndCompute(img2,None)
     FLANN_INDEX_KDTREE = 1
     index_params  = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-    search_params = dict(checks = 50)
+    search_params = dict(checks = 60)
     flann = cv2.FlannBasedMatcher(index_params, search_params)
     matches=flann.knnMatch(np.asarray(des1,np.float32),np.asarray(des2,np.float32), 2)
     # store all the good matches as per Lowe's ratio test.
@@ -74,7 +80,7 @@ while cap.isOpened():
         try:
             similarity = get_similarity(template, guess)
 
-            if similarity > 23:
+            if similarity > 35:
                 track_obj = (rgb, pos)
         except Exception as e:
             print(e, "Restart tracking")
@@ -85,7 +91,7 @@ while cap.isOpened():
     template = guess
 
     #Draw box + show frame
-    if similarity and isinstance(similarity, int) and similarity > 14:
+    if similarity and isinstance(similarity, int) and similarity > 20:
         cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)
         cv2.putText(frame, f"{similarity}", (startX, startY - 15), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
     cv2.imshow("Frame", frame)
