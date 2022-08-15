@@ -8,15 +8,22 @@ import numpy as np
 #     import gdown
 #     gdown.download(TRACK_POSITION, TEST_FILE_NAME)
 
-from dotenv import load_dotenv
-load_dotenv()
-
-TEST_FILE_NAME = os.getenv("NAME")
-TRACK_POSITION = tuple(map(int, os.getenv("RECT").split())) #First frame
 
 
 import cv2
 import dlib
+import json
+ 
+# Opening JSON file
+data = None
+test_dir_path  = os.path.join(os.getcwd(), 'test_data', 'test2')
+test_file_path = os.path.join(test_dir_path, 'test_info.json')
+
+with open(test_file_path) as json_file:
+    data = json.load(json_file)
+
+TEST_FILE_NAME = data['name']
+TRACK_POSITION = data['rect']
 
 
 def process_img(img):
@@ -55,7 +62,8 @@ prev_frame = None
 template = None
 similarity = "None"
 track_obj = None
-cap = cv2.VideoCapture(TEST_FILE_NAME)
+cap = cv2.VideoCapture(os.path.join(test_dir_path, TEST_FILE_NAME))
+print(os.path.join(test_file_path, TEST_FILE_NAME))
 while cap.isOpened():
     ret, frame = cap.read()
     # if frame is read correctly ret is True

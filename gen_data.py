@@ -22,11 +22,13 @@ info_path  = os.path.join(current_test_folder, 'test_info.txt')
 
 '''
 import os
+import cv2
+import json
 #Choose the folder to hold all test video
 TEST_FOLDER_NAME = 'test_data'
 
 #Get max test count to auto write new test
-max_test_count = 1
+max_test_count = 0
 subfolders = [ f.path for f in os.scandir(os.path.join(os.getcwd(), TEST_FOLDER_NAME)) if f.is_dir()] 
 for subfolder in subfolders:
     test_count = int(subfolder[subfolder.rindex('test') + len('test'):])
@@ -37,9 +39,9 @@ new_test_folder = f"test{max_test_count + 1}"
 current_test_folder = os.path.join(os.getcwd(), TEST_FOLDER_NAME, new_test_folder)
 os.mkdir(current_test_folder)
 video_path = os.path.join(current_test_folder, 'output.mp4')
-info_path  = os.path.join(current_test_folder, 'test_info.txt')
+info_path  = os.path.join(current_test_folder, 'test_info.json')
 
-import cv2
+
 
 current_pos = None
 points = []
@@ -97,12 +99,15 @@ while True:
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            out = cv2.VideoWriter(video_path, fourcc, 20, (width, height), isColor=True)
+            out    = cv2.VideoWriter(video_path, fourcc, 20, (width, height), isColor=True)
             os.chdir(current_test_folder)
+            
             with open(info_path, 'a') as f:
                 f.truncate(0)
-                f.write(f"NAME = 'output.mp4'\n")
-                f.write(f"RECT = '{x1} {y1} {x2} {y2}'")
+                data = {}
+                data['name'] = 'output.mp4'
+                data['rect'] = [x1, y1, x2, y2]
+                json.dump(data, f)
             writtten = True
         else:
             out.write(frame)
