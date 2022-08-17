@@ -11,9 +11,20 @@ import numpy as np
 import cv2
 import dlib
 import json
+import argparse
+import time
+
+parser = argparse.ArgumentParser(description='Write --test [TEST_NUM] to run')
+parser.add_argument('--test', type=int)
+parser.add_argument('--log', type=bool)
+parser.add_argument('--tracker', type=str)
+
+
+
+args = parser.parse_args()
  
 # Opening JSON file
-NUM_TEST = 7
+NUM_TEST = args.test
 data = None
 test_dir_path  = os.path.join(os.getcwd(), 'test_data', f'test{NUM_TEST}')
 test_file_path = os.path.join(test_dir_path, 'test_info.json')
@@ -63,6 +74,11 @@ similarity = "None"
 track_obj = None
 cap = cv2.VideoCapture(os.path.join(test_dir_path, TEST_FILE_NAME))
 
+total_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+fps = cap.get(cv2. CAP_PROP_FPS) 
+print(total_frame, fps, "so")
+
+start = time.time()
 guess_templates = []
 while cap.isOpened():
     ret, frame = cap.read()
@@ -116,7 +132,27 @@ while cap.isOpened():
     cv2.imshow("Frame", frame)
 
     if cv2.waitKey(1) == ord('q'): break
+
+end = time.time()
     
+
+if args.log:
+    with open(f"Test_{args.test}_result_with_{args.tracker}.txt", 'a') as f:
+        f.truncate(0)
+        fps = cap.get(cv2. CAP_PROP_FPS) 
+        total_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        duration    = total_frame / fps
+        actual_duration = end - start
+        lines = [
+            f"Total frames: {total_frame} frames",
+            f"Duration without detection: {duration} seconds",
+            f"Duration with detection: {actual_duration} seconds",
+            f"Detection time per frame: {(abs(actual_duration - duration) / total_frame) * 1000} ms",
+        ]
+        for line in lines:
+            f.write(line)
+            f.write('\n')
+            
 cap.release()
 cv2.destroyAllWindows()
 exit()
