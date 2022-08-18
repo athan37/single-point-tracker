@@ -56,7 +56,8 @@ _For example running test 3 with tracker mosse without video but with log data:_
 > python opencv_tracing.py --tracker mosse --test 3 --log True  
 
 ## Try out the tracker build up on dlib
-It's in the file dlib_enhanced.py, which can be run in the same way as other tracker. One note is that if you want to write the output, just pass it --tracker dlib  
+It's in the file dlib_enhanced.py, which can be run in the same way as other tracker. One note is that if you want to write the output, just add the arguments  
+> --tracker dlib  
 
 This tracker depends on:
 - similarity_helper.py file
