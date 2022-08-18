@@ -53,10 +53,11 @@ total_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 fps = cap.get(cv2. CAP_PROP_FPS) 
 
 #For ouput a video
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-out    = cv2.VideoWriter(f"enhanced_dlib.mp4", fourcc, 20, (width, height), isColor=True)
+if args.output:
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    out    = cv2.VideoWriter(f"enhanced_dlib.mp4", fourcc, 20, (width, height), isColor=True)
 
 guess_templates = []
 start = time.time()

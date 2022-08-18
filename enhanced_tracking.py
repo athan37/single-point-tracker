@@ -1,10 +1,15 @@
+'''
+    Aim of this file is for a general enhanced tracking base on similarity on top
+    of all the tracker. 
+'''
 import os
 import numpy as np
 import cv2
 import json
 import argparse
-from Tracker_DLIB import Tracker_DLIB_create
 import time
+from Tracker_DLIB import Tracker_DLIB_create
+from similarity_helper import get_similarity
 
 #Choose between the 8 trackers
 OPENCV_OBJECT_TRACKERS = {
@@ -22,7 +27,6 @@ parser = argparse.ArgumentParser(description='Write --test [TEST_NUM] to run')
 parser.add_argument('--test', type=int)
 parser.add_argument('--tracker', type=str)
 parser.add_argument('--log', type=bool)
-parser.add_argument('--output', type=bool)
 
 args = parser.parse_args()
  
@@ -41,6 +45,7 @@ TRACK_POSITION = data['rect']
 track_position = TRACK_POSITION
 
 tracker    = None
+prev_frame = None
 template   = None
 similarity = "None"
 track_obj  = None
@@ -57,11 +62,6 @@ success, img = cap.read()
 '''
 Uncomment the thing below to select region
 
-bbox is [x, y, w, h]
-
-we input [x1, y1, x2, y2]
-
-=> convert [x1, y1, x2 - x1, y2 - y1]
 '''
 # # select a bounding box ( ROI )
 # bbox = cv2.selectROI("Tracking", img, False, fromCenter=False)
@@ -70,19 +70,16 @@ we input [x1, y1, x2, y2]
 x1, y1, x2, y2 = track_position
 bbox = [x1, y1, x2 - x1, y2 - y1]
 tracker.init(img, bbox)
+tracker.init(img, TRACK_POSITION)
 
 def drawBox(img, bbox):
     x, y, w, h = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
     cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 255), 3, 1)
     cv2.putText(img, "Tracking", (75, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-#For output a video
-if args.output:
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    out    = cv2.VideoWriter(f"{args.tracker}_test{args.test}.mp4", fourcc, 20, (width, height), isColor=True)
-
+guess_templates = []
+guess = None
+template = None
 start = time.time()
 while True:
     timer = cv2.getTickCount()
@@ -90,26 +87,46 @@ while True:
 
     try:
         success, bbox = tracker.update(img)
+
+        [startX, startY, endX, endY] = bbox
+        
+        guess = img[startY:endY, startX:endX]
     except Exception as e:
         pass
 
+    if template is not None:
+        try:
+            similarity = get_similarity(template, guess)
+            
+            if similarity > 6:
+                track_obj = (rgb, pos)
+                guess_templates.append(track_obj)
 
-    if success:
+        except Exception as e:
+            print("Restart tracking")
+            max_similarity = -float("inf")
+            index = -1
+            for i, guess_template in enumerate(guess_templates):
+                if similarity > max_similarity:
+                    max_similarity = similarity
+                    index          = i
+
+            if track_obj is not None:
+                tracker.start_track(*guess_templates[index]) 
+                #tracker.start_track(*track_obj)
+
+    #Update prev frame
+    template = guess
+
+    if success and isinstance(similarity, int) and similarity > 10:
         drawBox(img, bbox)
     else:
         cv2.putText(img, "Loss", (75, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
     try:
-        fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
-        cv2.putText(img, str(int(fps)), (75, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        if args.output == True:
-            args.log = None
-
-            out.write(img)
-
         cv2.imshow("Frame", img)
     except Exception as e:
-        break
+        pass
 
     if cv2.waitKey(1) & 0xff == ord('q'):
         break
