@@ -1,4 +1,0 @@
-Total frames: 972 frames
-Duration without detection: 32.384033333333335 seconds
-Duration with detection: 82.04129767417908 seconds
-Detection time per frame: 51.087720515273396 ms
