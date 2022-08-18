@@ -55,6 +55,13 @@ _For example running test 3 with tracker mosse without video but with log data:_
 
 > python opencv_tracing.py --tracker mosse --test 3 --log True  
 
+## Tracking on webcam with dlib
+Run the file dlib_match.py with your webcam on and select a region of interest
+
+## Tracking on webcam with openCV template matching
+
+Run the file opencv_match.py with your webcam on and select a region of interest
+
 ## Try out the tracker build up on dlib
 It's in the file dlib_enhanced.py, which can be run in the same way as other tracker, but no need to pass the `--tracker` argument  
 > python dlib_enhanced.py --test 3 --log True  
