@@ -70,6 +70,6 @@ This tracker depends on:
 - similarity_helper.py file
 
 _Manually fix the similarity parameter yourself? Pass in `--noOfTemplates, --minSaveSimilarity, --minDisplaySimilarity`_  
-> python dlib_enhanced.py --tracker dlib --test 3 --log True  
+> python dlib_enhanced.py --tracker dlib --test 3 --log True --noOfTemplates 10 --minSaveSimilarity 26 --minDisplaySimilarity 20
 
 
