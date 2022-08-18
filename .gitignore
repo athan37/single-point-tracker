@@ -1,3 +1,4 @@
 *.mp4
 *.env
+*.txt
 test_data/
