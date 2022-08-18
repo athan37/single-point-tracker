@@ -154,13 +154,14 @@ while True:
             pos = tracker.get_position()
 
             #Process information here to detect again
-
-            if frame_count % 5 == 0 or low_similarity((rgb, pos), track_object):
-                tracker = dlib.correlation_tracker() # restart
-                template = image_from_object(track_object)
-                tracker.start_track(rgb, dlib.rectangle(*detect(template, rgb)))
-                pos = tracker.get_position()
-
+            try:
+                if frame_count % 5 == 0 or low_similarity((rgb, pos), track_object):
+                    tracker = dlib.correlation_tracker() # restart
+                    template = image_from_object(track_object)
+                    tracker.start_track(rgb, dlib.rectangle(*detect(template, rgb)))
+                    pos = tracker.get_position()
+            except Exception as e:
+                tracker.start_track(*track_obj)
             # if is_out_of_box(pos):
             #     print("Out")
             #     tracker = dlib.correlation_tracker() 

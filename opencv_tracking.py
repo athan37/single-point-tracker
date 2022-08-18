@@ -3,6 +3,24 @@ import numpy as np
 import cv2
 import json
 import argparse
+import dlib
+
+class Tracker_DLIB_create:
+    def __init__(self):
+        self.tracker = dlib.correlation_tracker()
+
+    def init(self, img, box):
+        rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        x1, y1, x2, y2 = box
+        rect = dlib.rectangle(x1, y1, x2, y2) 
+        self.tracker.start_track(rgb, rect)
+
+    def update(self, img):
+        rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        self.tracker.update(rgb)
+        pos = self.tracker.get_position()
+        bbox = list(map(int, [pos.left(), pos.top(), pos.right(), pos.bottom()]))
+        return True, bbox
 
 OPENCV_OBJECT_TRACKERS = {
         "csrt": cv2.legacy.TrackerCSRT_create(),
@@ -11,7 +29,8 @@ OPENCV_OBJECT_TRACKERS = {
         "mil": cv2.legacy.TrackerMIL_create(),
         "tld": cv2.legacy.TrackerTLD_create(),
         "medianflow": cv2.legacy.TrackerMedianFlow_create(),
-        "mosse": cv2.legacy.TrackerMOSSE_create()
+        "mosse": cv2.legacy.TrackerMOSSE_create(),
+        "dlib": Tracker_DLIB_create()
     }
 
 parser = argparse.ArgumentParser(description='Write --test [TEST_NUM] to run')
@@ -45,18 +64,17 @@ cap = cv2.VideoCapture(os.path.join(test_dir_path, TEST_FILE_NAME))
 tracker = OPENCV_OBJECT_TRACKERS[args.tracker]
 
 success, img = cap.read()
-# [x1, y1, x2, y2] = track_position
-# cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 3, 1)
-# cv2.imshow("Windhow img", img)
-# cv2.waitKey(0)
+[x1, y1, x2, y2] = track_position
+cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 3, 1)
+cv2.imshow("Window img", img)
+cv2.waitKey(0)
 
 # # select a bounding box ( ROI )
-# bbox = cv2.selectROI("Tracking", img, False)
+# bbox = cv2.selectROI("Tracking", img, False, fromCenter=False)
 # tracker.init(img, bbox)
 # print(bbox, "as")
+
 tracker.init(img, TRACK_POSITION)
-
-
 
 def drawBox(img, bbox):
     x, y, w, h = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
