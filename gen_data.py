@@ -1,24 +1,15 @@
 '''
-2 things:
-Record a video from webcam
+This file helps generate data, and auto detect the next folder to be generated
 
-Get the intial position of the object
+The folder will be like this:
+- test_data/
+    -> test1/
+        -> output.mp4
+        -> test_info.json
+    -> test2/
+        ...
 
-Useful commands: 
-
-TEST_FOLDER_NAME = 'test_data'
-subfolders = [ f.path for f in os.scandir(os.path.join(os.getcwd(), TEST_FOLDER_NAME)) if f.is_dir()] 
-
-max_test_count = 1
-for subfolder in subfolders:
-    test_count = int(subfolder[subfolder.rindex('test') + len('test'):])
-    max_test_count = max(max_test_count, test_count)
-
-current_test_folder = os.path.join(os.getcwd(), TEST_FOLDER_NAME, f"test{max_test_count + 1}")
-
-video_path = os.path.join(current_test_folder, 'output.mp4')
-info_path  = os.path.join(current_test_folder, 'test_info.txt')
-
+test1, test2, ..., testN is auto written
 
 '''
 import os
@@ -41,14 +32,14 @@ os.mkdir(current_test_folder)
 video_path = os.path.join(current_test_folder, 'output.mp4')
 info_path  = os.path.join(current_test_folder, 'test_info.json')
 
-
-
+#Click and drag to crop
 current_pos = None
 points = []
 cropping = False
 new_template = True
 template = None
 
+#Crop function, if count is 2 then the area is saved
 def on_mouse(event, x, y, flags,params):
 
     global new_template, points, cropping, current_pos, template #, rect,startPoint,endPoint
@@ -95,6 +86,7 @@ while True:
 
         #Start writing video from this frame plus storing the position of the template
 
+        #Write a video
         if writtten == False:
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
