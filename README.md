@@ -69,7 +69,7 @@ It's in the file dlib_enhanced.py, which can be run in the same way as other tra
 This tracker depends on:
 - similarity_helper.py file
 
-_Manually fix the similarity parameter yourselfs? Pass in `--noOfTemplates, --minSaveSimilarity, --minDisplaySimilarity`_  
+_Manually fix the similarity parameter yourself? Pass in `--noOfTemplates, --minSaveSimilarity, --minDisplaySimilarity`_  
 > python dlib_enhanced.py --tracker dlib --test 3 --log True  
 
 
