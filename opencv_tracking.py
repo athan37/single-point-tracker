@@ -4,8 +4,12 @@ import cv2
 import json
 import argparse
 import dlib
+import time
 
 class Tracker_DLIB_create:
+    '''
+        Wrapper class for dlib so that it can run with the "framework"
+    '''
     def __init__(self):
         self.tracker = dlib.correlation_tracker()
 
@@ -16,12 +20,13 @@ class Tracker_DLIB_create:
         self.tracker.start_track(rgb, rect)
 
     def update(self, img):
-        rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        rgb  = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.tracker.update(rgb)
-        pos = self.tracker.get_position()
+        pos  = self.tracker.get_position()
         bbox = list(map(int, [pos.left(), pos.top(), pos.right(), pos.bottom()]))
         return True, bbox
 
+#Choose between the 8 trackers
 OPENCV_OBJECT_TRACKERS = {
         "csrt": cv2.legacy.TrackerCSRT_create(),
         "kcf": cv2.legacy.TrackerKCF_create(),
@@ -42,7 +47,7 @@ args = parser.parse_args()
  
 # Opening JSON file
 NUM_TEST = args.test
-data = None
+data     = None
 test_dir_path  = os.path.join(os.getcwd(), 'test_data', f'test{NUM_TEST}')
 test_file_path = os.path.join(test_dir_path, 'test_info.json')
 
@@ -54,25 +59,28 @@ TRACK_POSITION = data['rect']
 
 track_position = TRACK_POSITION
 
-tracker = None
+tracker    = None
 prev_frame = None
-template = None
+template   = None
 similarity = "None"
-track_obj = None
+track_obj  = None
 cap = cv2.VideoCapture(os.path.join(test_dir_path, TEST_FILE_NAME))
 
 tracker = OPENCV_OBJECT_TRACKERS[args.tracker]
 
 success, img = cap.read()
-[x1, y1, x2, y2] = track_position
-cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 3, 1)
-cv2.imshow("Window img", img)
-cv2.waitKey(0)
+# [x1, y1, x2, y2] = track_position
+# cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 3, 1)
+# cv2.imshow("Window img", img)
+# cv2.waitKey(0)
 
+'''
+Uncomment the thing below to select region
+
+'''
 # # select a bounding box ( ROI )
 # bbox = cv2.selectROI("Tracking", img, False, fromCenter=False)
 # tracker.init(img, bbox)
-# print(bbox, "as")
 
 tracker.init(img, TRACK_POSITION)
 
@@ -81,14 +89,17 @@ def drawBox(img, bbox):
     cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 255), 3, 1)
     cv2.putText(img, "Tracking", (75, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-import time
 
 start = time.time()
 while True:
     timer = cv2.getTickCount()
     success, img = cap.read()
 
-    success, bbox = tracker.update(img)
+    try:
+        success, bbox = tracker.update(img)
+    except Exception as e:
+        pass
+
 
     if success:
         drawBox(img, bbox)
@@ -107,7 +118,7 @@ while True:
 
 end = time.time()
 
-
+# If the log argument equals True, then we will write a file
 if args.log:
     with open(f"Test_{args.test}_result_with_{args.tracker}.txt", 'a') as f:
         f.truncate(0)
